@@ -23,18 +23,9 @@ public class Controller {
   }
 
   @PostMapping
-  public ResponseEntity<ResponseDto> execute(@RequestBody InputWrapper inputWrapper) {
+  public ResponseEntity<ResponseDto> execute(@RequestBody InputWrapper inputWrapper)
+      throws InterruptedException {
     ResponseDto responseDto = loadSimulatorService.simulateLoad(inputWrapper);
     return new ResponseEntity<>(responseDto, HttpStatus.OK);
   }
-
-  //  @PostMapping
-  //  public ResponseEntity<ResponseDto> executeV2(
-  //      @RequestParam Integer usersCount,
-  //      @RequestParam Integer tasksCount,
-  //      @RequestParam Long apiCallTimeout) {
-  ////    ResponseDto responseDto =
-  ////        loadSimulatorService.simulateLoadV2(usersCount, tasksCount, apiCallTimeout);
-  //    return new ResponseEntity<>(null, HttpStatus.OK);
-  //  }
 }

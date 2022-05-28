@@ -18,5 +18,5 @@ public class ResponseDto {
   private Integer completedTasks;
   private Integer failedTasks;
   private List<Details> details;
-  private LongSummaryStatistics avgTimeTaken;
+  private LongSummaryStatistics summaryStatistics;
 }

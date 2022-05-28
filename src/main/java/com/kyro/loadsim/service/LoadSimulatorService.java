@@ -13,20 +13,22 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LongSummaryStatistics;
 import java.util.concurrent.*;
 
 @Service
 @Slf4j
 public class LoadSimulatorService {
 
-  public ResponseDto simulateLoad(InputWrapper inputWrapper) {
+
+  public ResponseDto simulateLoad(InputWrapper inputWrapper) throws InterruptedException {
 
     final Integer threadCount = inputWrapper.getThreadCount();
     final Integer taskCount = inputWrapper.getTaskCount();
 
-    ResponseDto responseDto;
+    final ResponseDto responseDto;
 
-    List<Details> detailsList = new ArrayList<>();
+    final List<Details> detailsList = new ArrayList<>();
 
     int tasksDoneCount = 0;
     int tasksFailedCount = 0;
@@ -84,10 +86,16 @@ public class LoadSimulatorService {
         }
       }
       log.info("All tasks done! Active thread count {}", executorService.getActiveCount());
-    } catch (InterruptedException | ExecutionException e) {
-      log.info("Failed execution! Error: {}", e.getMessage());
+    } catch (InterruptedException e) {
+      log.error("Interrupted! {}", e.getMessage(), e);
+      throw e;
+    } catch (Exception e) {
+      log.warn("Failed execution! Error: {}", e.getMessage());
     } finally {
       executorService.shutdownNow();
+      final LongSummaryStatistics summaryStatistics =
+          detailsList.stream().mapToLong(Details::getTimeTaken).summaryStatistics();
+
       responseDto =
           ResponseDto.builder()
               .completedTasks(tasksSuccessCount)
@@ -95,9 +103,10 @@ public class LoadSimulatorService {
               .totalTasksSubmitted(taskCount)
               .totalTasksDone(tasksDoneCount)
               .details(detailsList)
-              .avgTimeTaken(
-                  detailsList.stream().mapToLong(Details::getTimeTaken).summaryStatistics())
+              .summaryStatistics(summaryStatistics)
               .build();
+
+      FileProcessor.writeToFile(summaryStatistics);
     }
     return responseDto;
   }
